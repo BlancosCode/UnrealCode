@@ -1,0 +1,21 @@
+# Visual Studio files
+.vs
+*.vcxproj
+*.vcxproj.filters
+*.sln
+*.suo
+*.opensdf
+*.sdf
+
+# Unreal Engine folders to ignore
+Binaries/
+Build/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Local configuration files
+Config/User*
+
+# Mac/iOS specific
+.DS_Store
