@@ -53,11 +53,26 @@ public:
 
 	/** Constructor */
 	AButWhyCharacter();	
+	virtual void Tick(float DeltaSeconds) override;
 
 protected:
 
 	/** Initialize input action bindings */
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	UPROPERTY(EditAnywhere, Category="Penguin Logic")
+	float MaxTimeLife=180.0f;
+
+	float currentTimeLife;
+	bool bIsDead=false;
+
+	UPROPERTY(EditDefaultsOnly, Category="Penguin Logic")
+	UAnimMontage* DeathMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category="Penguin Logic")
+	UAnimMontage* StumbleMontage;
+
+	void HandleDeath();
+	void CheckForStumble();
 
 protected:
 
@@ -66,6 +81,19 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
+	UPROPERTY(EditAnywhere, Category="Camera Death")
+	float DeathArmLength=1000.0f;
+
+	UPROPERTY(EditAnywhere, Category="Camera Death")
+	float DeathZOffset=150.0f;
+
+	UPROPERTY(EditAnywhere, Category="Camera Death")
+	float CameraTransitionSpeed=2.0f;
+
+	bool bStartDeathCam=false;
+
+	virtual void BeginPlay() override;
 
 public:
 

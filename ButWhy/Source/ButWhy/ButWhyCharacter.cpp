@@ -133,3 +133,89 @@ void AButWhyCharacter::DoJumpEnd()
 	// signal the character to stop jumping
 	StopJumping();
 }
+
+void AButWhyCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	currentTimeLife = MaxTimeLife;
+
+	CameraBoom=FindComponentByClass<USpringArmComponent>();
+}
+
+void AButWhyCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	bool IsStumbling=false;
+	if(GetMesh()->GetAnimInstance() && StumbleMontage)
+	{
+		IsStumbling=GetMesh()->GetAnimInstance()->Montage_IsPlaying(StumbleMontage);
+	}
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if(PC && !bIsDead){
+		PC->SetIgnoreMoveInput(IsStumbling);
+	}
+
+	if(bStartDeathCam && CameraBoom)
+	{
+		float NewArmLength = FMath::FInterpTo(CameraBoom->TargetArmLength, DeathArmLength, DeltaTime, CameraTransitionSpeed);
+		CameraBoom->TargetArmLength = NewArmLength;
+
+		FVector CurrentOffset=CameraBoom->SocketOffset;
+		float NewZ=FMath::FInterpTo(CurrentOffset.Z, DeathZOffset, DeltaTime, CameraTransitionSpeed);
+		CameraBoom->SocketOffset=FVector(CurrentOffset.X,CurrentOffset.Y,NewZ);
+	}
+	if (bIsDead){return;}
+
+	currentTimeLife -= DeltaTime;
+	if (currentTimeLife <= 0.0f)
+	{
+		HandleDeath();
+	}
+	else if (GetVelocity().Size() > 10.0f)
+	{
+		CheckForStumble();
+	}
+
+	
+}
+
+void AButWhyCharacter::HandleDeath()
+{
+	if (bIsDead) return;
+
+	bStartDeathCam = true;
+	bIsDead = true;
+
+
+	APlayerController* PC = Cast<APlayerController>(GetController());	
+	if (PC)
+	{
+		PC->SetCinematicMode(true, false, false, true, true);
+		PC->SetIgnoreLookInput(false);
+		PC->SetIgnoreMoveInput(true);
+	}
+	GetCharacterMovement()->DisableMovement();
+	
+	if (DeathMontage)
+	{
+		PlayAnimMontage(DeathMontage);
+	}
+	//va aggiunto il fade in nero e le scritte migliori nel prossimo sprint
+	UE_LOG(LogButWhy, Warning, TEXT("You died"));
+}
+
+void AButWhyCharacter::CheckForStumble()
+{
+	
+	float StumbleChance = FMath::FRandRange(0.0f, 100.0f);
+	if (StumbleChance < 0.05f) // 0.05% chance to stumble each tick while moving
+	{	
+		PlayAnimMontage(StumbleMontage);
+		APlayerController* PC = Cast<APlayerController>(GetController());
+		if (PC){
+			PC->PlayDynamicForceFeedback(0.5f, 0.2f, true, true, true, true, EDynamicForceFeedbackAction::Start);
+		}
+	}
+}
